@@ -3,56 +3,72 @@ import uproot
 import pandas as pd
 import csv
 import json
+import matplotlib.pyplot as plt
+import time
+import random
+import statistics
 
+
+start_time = time.time()
 
 # testing for one file
 file = uproot.open("C:\\Users\\zalewski\\Desktop\\work\\data\\geo1\\cln_run01.root:cleaned")
-# print(file.keys())
+
+# columns necessary for data interpretation
 df = file.arrays(['SQX_L', 'SQY_L', 'CsI_L',
                   'SQX_R', 'SQY_R', 'CsI_R',
                   'F3', 'tdcF3', 'F5', 'tdcF5',
                   'nx1', 'ny1', 'nx2', 'ny2',
                   'x1', 'y1', 'x2', 'y2', 'trigger'], library="pd")
 
+# read columns and corresponding calibration files paths
 data = {}
-with open('calibration_files.csv', 'r') as fp:
-    data = json.load(fp)
+with open('calibration_files.json', 'r') as parameters_file:
+    data = json.load(parameters_file)
 
 # read column + calibration path pair
 for column, path in data.items():
     slope = []
     intercept = []
-    pixel_number = 0
     # open calibration parameters file for each detector
     with open(path, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         # read calibration parameters for each pixel
         for row in reader:
-            slope.append(float(row[0]))
-            intercept.append(float(row[1]))
-            df[column] = df[column].apply(lambda x: slope[pixel_number] * x + intercept[pixel_number])
-            pixel_number += 1
+            intercept.append(float(row[0]))
+            slope.append(float(row[1]))
+
+        # perform calibration of each column with read parameters
+        tmp_array = np.array(df[column].tolist())
+        calibrated_array = (tmp_array + random.uniform(-0.5, 0.5)) * slope + intercept
+        df[column] = calibrated_array.tolist()
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+# get numbers of strips with the highest energy
+df['strip_X_L'] = [x.index(max(x)) for x in df['SQX_L']]
+df['strip_Y_L'] = [x.index(max(x)) for x in df['SQY_L']]
+df['strip_X_R'] = [x.index(max(x)) for x in df['SQX_R']]
+df['strip_X_R'] = [x.index(max(x)) for x in df['SQY_R']]
+df['csi_L'] = [x.index(max(x)) for x in df['CsI_L']]
+df['csi_R'] = [x.index(max(x)) for x in df['CsI_R']]
+
+# get the highest energies
+df['sqlde'] = [max(x) for x in df['SQX_L']]
+df['sqrde'] = [max(x) for x in df['SQY_L']]
+df['sqletot'] = [max(x) for x in df['CsI_L']]
+df['sqretot'] = [max(x) for x in df['CsI_R']]
 
 
 
+plt.scatter(df['sqletot'], df['sqlde'])
+plt.show()
+
+df['tF3'] = [statistics.mean(x) for x in df['tdcF3']]
+df['tF5'] = [statistics.mean(x) for x in df['tdcF5']]
+df['aF5'] = [statistics.mean(x) for x in df['F5']]
 
 
-
-df['strip_X_L'] = df['SQX_L'].apply(lambda x: np.argmax(x))
-df['strip_Y_L'] = df['SQY_L'].apply(lambda x: np.argmax(x))
-df['strip_X_R'] = df['SQX_R'].apply(lambda x: np.argmax(x))
-df['strip_X_R'] = df['SQX_R'].apply(lambda x: np.argmax(x))
-df['csi_L'] = df['CsI_L'].apply(lambda x: np.argmax(x))
-df['csi_R'] = df['CsI_R'].apply(lambda x: np.argmax(x))
-
-df['sqlde'] = df['SQX_L'].apply(lambda x: np.max(x))
-df['sqrde'] = df['SQX_R'].apply(lambda x: np.max(x))
-df['sqletot'] = df['CsI_L'].apply(lambda x: np.max(x))
-df['sqretot'] = df['CsI_R'].apply(lambda x: np.max(x))
-
-df['tF3'] = df['tdcF3'].apply(lambda x: np.mean(x))
-df['tF5'] = df['tdcF5'].apply(lambda x: np.mean(x))
-df['aF5'] = df['F5'].apply(lambda x: np.mean(x))
 
 df.drop(['SQX_L', 'SQY_L', 'CsI_L',
          'SQX_R', 'SQY_R', 'CsI_R',
