@@ -1,0 +1,10 @@
+{
+    "SQX_L": "C://Users/zalewski/Desktop/work/data/calibrationParameters/SQX_L.csv",
+    "SQY_L": "C://Users/zalewski/Desktop/work/data/calibrationParameters/SQY_L.csv",
+    "SQX_R": "C://Users/zalewski/Desktop/work/data/calibrationParameters/SQX_R.csv",
+    "SQY_R": "C://Users/zalewski/Desktop/work/data/calibrationParameters/SQY_R.csv",
+    "CsI_L": "C://Users/zalewski/Desktop/work/data/calibrationParameters/CsI_L.csv",
+    "CsI_R": "C://Users/zalewski/Desktop/work/data/calibrationParameters/CsI_R.csv",
+    "tdcF3": "C://Users/zalewski/Desktop/work/data/calibrationParameters/tdcF3.csv",
+    "tdcF5": "C://Users/zalewski/Desktop/work/data/calibrationParameters/tdcF3.csv"
+}
